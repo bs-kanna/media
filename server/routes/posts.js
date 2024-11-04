@@ -1,5 +1,3 @@
-// routes/posts.js
-
 const express = require('express');
 const Post = require('../models/Post');
 const Comment = require('../models/Comment');
@@ -14,7 +12,6 @@ router.post('/', async (req, res) => {
         const newPost = new Post({ userId, postContent });
         await newPost.save();
 
-        // Add post to user's posts array
         const user = await User.findById(userId);
         user.posts.push(newPost._id);
         await user.save();
@@ -34,7 +31,6 @@ router.post('/:postId/comments', async (req, res) => {
         const newComment = new Comment({ userId, commentText, postId });
         await newComment.save();
 
-        // Add comment to the post's comments array
         const post = await Post.findById(postId);
         post.comments.push(newComment._id);
         await post.save();
@@ -45,7 +41,6 @@ router.post('/:postId/comments', async (req, res) => {
     }
 });
 
-// Get all comments for a specific post
 router.get('/:postId/comments', async (req, res) => {
     const { postId } = req.params;
 
@@ -80,7 +75,6 @@ router.delete('/comments/:commentId', async (req, res) => {
         const deletedComment = await Comment.findByIdAndDelete(commentId);
         if (!deletedComment) return res.status(404).json({ message: 'Comment not found' });
 
-        // Optionally, you can also remove the comment ID from the related post
         await Post.findByIdAndUpdate(deletedComment.postId, { $pull: { comments: commentId } });
 
         res.json({ message: 'Comment deleted successfully' });
@@ -88,5 +82,50 @@ router.delete('/comments/:commentId', async (req, res) => {
         res.status(500).json({ message: 'Server error' });
     }
 });
+
+// Like a post
+router.post('/:postId/like', async (req, res) => {
+    const { userId } = req.body;
+    const { postId } = req.params;
+
+    try {
+        const post = await Post.findById(postId);
+        if (!post) return res.status(404).json({ message: 'Post not found' });
+
+        if (post.likes.includes(userId)) {
+            return res.status(400).json({ message: 'Post already liked' });
+        }
+
+        post.likes.push(userId);
+        await post.save();
+        res.json(post);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+// Unlike a post
+router.post('/:postId/unlike', async (req, res) => {
+    const { userId } = req.body;
+    const { postId } = req.params;
+
+    try {
+        const post = await Post.findById(postId);
+        if (!post) return res.status(404).json({ message: 'Post not found' });
+
+        if (post.unlikes.includes(userId)) {
+            return res.status(400).json({ message: 'Post already unliked' });
+        }
+
+        post.unlikes.push(userId);
+        await post.save();
+        res.json(post);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
 
 module.exports = router;

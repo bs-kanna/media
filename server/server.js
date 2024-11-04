@@ -6,13 +6,16 @@ const dotenv = require('dotenv');
 dotenv.config(); 
 
 const app = express();
+
+const cors = require('cors');
+app.use(cors());
+
 const PORT = process.env.PORT || 5000;
 
 const User = require('./models/User');
 const Post = require('./models/Post');
 const Comment = require('./models/Comment');
-const likesRouter = require('./routes/likes');
-const followRouter = require('./routes/follow');
+const followRouter = require('./routes/users');
 const authRouter = require('./routes/auth');
 const postsRouter = require('./routes/posts');
 
@@ -36,7 +39,6 @@ app.listen(PORT, () => {
 });
 
 //Routes
-app.use('/api/likes', likesRouter);
-app.use('/api/follow', followRouter);
+app.use('/api/users', followRouter);
 app.use('/api/auth', authRouter);
 app.use('/api/posts', postsRouter);
